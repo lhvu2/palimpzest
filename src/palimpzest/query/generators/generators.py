@@ -330,6 +330,14 @@ class Generator(Generic[ContextType, InputType]):
                 completion_kwargs = {"reasoning_effort": reasoning_effort, **completion_kwargs}
             if self.model.is_vllm_model():
                 completion_kwargs = {"api_base": self.api_base, "api_key": os.environ.get("VLLM_API_KEY", "fake-api-key"), **completion_kwargs}
+            
+            # IBM Litellm Proxy
+            #self.model_name = "aws/claude-haiku-4-5"
+            self.model_name = "openai/aws/claude-sonnet-4-5"
+            completion_kwargs = {}
+            completion_kwargs['api_base'] = "https://ete-litellm.ai-models.vpc-int.res.ibm.com"
+            completion_kwargs['api_key'] = os.environ.get("IBM_LITELLM_API_KEY")
+
             completion = litellm.completion(model=self.model_name, messages=messages, **completion_kwargs)
             end_time = time.time()
             logger.debug(f"Generated completion in {end_time - start_time:.2f} seconds")
@@ -357,9 +365,14 @@ class Generator(Generic[ContextType, InputType]):
             usage = completion.usage.model_dump()
 
             # get cost per input/output token for the model
-            usd_per_input_token = MODEL_CARDS[self.model_name].get("usd_per_input_token", 0.0)
-            usd_per_audio_input_token = MODEL_CARDS[self.model_name].get("usd_per_audio_input_token", 0.0)
-            usd_per_output_token = MODEL_CARDS[self.model_name]["usd_per_output_token"]
+            # usd_per_input_token = MODEL_CARDS[self.model_name].get("usd_per_input_token", 0.0)
+            # usd_per_audio_input_token = MODEL_CARDS[self.model_name].get("usd_per_audio_input_token", 0.0)
+            # usd_per_output_token = MODEL_CARDS[self.model_name]["usd_per_output_token"]
+
+            # IBM
+            usd_per_input_token = 0.0
+            usd_per_audio_input_token = 0.0
+            usd_per_output_token = 0
 
             # TODO: for some models (e.g. GPT-5) we cannot separate text from image prompt tokens yet;
             #       for now, we only use tokens from prompt_token_details if it's an audio prompt
